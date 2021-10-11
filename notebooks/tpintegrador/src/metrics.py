@@ -1,64 +1,42 @@
 import numpy as np
 
 
-class BaseMetric:
-    def __init__(self, **kwargs):
-        self.parameters = kwargs
-
-    def __call__(self, *args, **kwargs):
-        pass
+class Metric(object):
+    def __call__(self, target, prediction):
+        return NotImplemented
 
 
-class Precision(BaseMetric):
-    def __init__(self, **kwargs):
-        BaseMetric.__init__(self, **kwargs)
-
-    def __call__(self):
-        prediction = self.parameters["predictions"]
-        truth = self.parameters["truth"]
-        true_pos_mask = (prediction == 1) & (truth == 1)
-        true_pos = true_pos_mask.sum()
-        false_pos_mask = (prediction == 1) & (truth == 0)
-        false_pos = false_pos_mask.sum()
-        return true_pos/(true_pos + false_pos)
-
-
-class Recall(BaseMetric):
-    def __init__(self, **kwargs):
-        BaseMetric.__init__(self, **kwargs)
-
-    def __call__(self):
-        prediction = self.parameters["predictions"]
-        truth = self.parameters["truth"]
-        true_pos_mask = (prediction == 1) & (truth == 1)
-        true_pos = true_pos_mask.sum()
-        false_neg_mask = (prediction == 0) & (truth == 1)
-        false_neg = false_neg_mask.sum()
-        return true_pos/(true_pos + false_neg)
-
-
-class Accuracy(BaseMetric):
-    def __init__(self, **kwargs):
-        BaseMetric.__init__(self, **kwargs)
-
-    def __call__(self):
-        prediction = self.parameters["predictions"]
-        truth = self.parameters["truth"]
-        true_pos_mask = (prediction == 1) & (truth == 1)
-        true_pos = true_pos_mask.sum()
-        false_pos_mask = (prediction == 1) & (truth == 0)
-        false_pos = false_pos_mask.sum()
-        true_neg_mask = (prediction == 0) & (truth == 0)
-        true_neg = true_neg_mask.sum()
-        false_neg_mask = (prediction == 0) & (truth == 1)
-        false_neg = false_neg_mask.sum()
-        return (true_pos + true_neg)/(true_pos + true_neg + false_pos + false_neg)
-
-
-class MSE(BaseMetric):
+class MSE(Metric):
     def __init__(self):
-        BaseMetric.__init__(self)
+        Metric.__init__(self)
 
     def __call__(self, target, prediction):
         n = target.size
         return np.sum((target - prediction) ** 2) / n
+
+
+class Accuracy(Metric):
+    def __call__(self, target, prediction):
+        return np.mean(target == prediction, axis=0)
+
+
+class Precision(Metric):
+    def __call__(self, target, prediction):
+        inverse_truth = np.where(target == 0, 1, 0)
+        inverse_predictions = np.where(prediction == 0, 1, 0)
+        TP = np.sum(prediction * target)
+        TN = np.sum(inverse_predictions * inverse_truth)
+        FN = np.sum(target * inverse_predictions)
+        FP = np.sum(prediction * inverse_truth)
+        return TP / (TP + FP)
+
+
+class Recall(Metric):
+    def __call__(self, target, prediction):
+        inverse_truth = np.where(target == 0, 1, 0)
+        inverse_predictions = np.where(prediction == 0, 1, 0)
+        TP = np.sum(prediction * target)
+        TN = np.sum(inverse_predictions * inverse_truth)
+        FN = np.sum(target * inverse_predictions)
+        FP = np.sum(prediction * inverse_truth)
+        return TP / (TP + FN)

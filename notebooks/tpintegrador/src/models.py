@@ -39,12 +39,12 @@ class LinearRegression(BaseModel):
 class LinearRegressionWithB(BaseModel):
 
     def fit(self, X, y):
-        X_expanded = np.vstack((X, np.ones(len(X)))).T
+        X_expanded = np.hstack((np.ones((len(X),1)),X))
         W = np.linalg.inv(X_expanded.T.dot(X_expanded)).dot(X_expanded.T).dot(y)
         self.model = W
 
     def predict(self, X):
-        X_expanded = np.vstack((X, np.ones(len(X)))).T
+        X_expanded = np.hstack((np.ones((len(X),1)),X))
         return X_expanded.dot(self.model)
 
 
@@ -59,7 +59,7 @@ class LinearRegressionWithGradient(BaseModel):
     """
 
     def fit(self, X, y, lr=0.01, epochs=100, b=16, gradient='SGD'):
-        X_expanded = np.vstack((X, np.ones(len(X)))).T
+        X_expanded = np.hstack((np.ones((len(X),1)),X))
 
         if gradient == 'BGD':
             w = self.gradient_descent(X_expanded, y, lr, epochs)
@@ -76,7 +76,7 @@ class LinearRegressionWithGradient(BaseModel):
 
 
     def predict(self, X):
-        X_expanded = np.vstack((X, np.ones(len(X)))).T
+        X_expanded = np.hstack((np.ones((len(X),1)),X))
         return X_expanded.dot(self.model)
 
     def gradient_descent(self, X_train, y_train, lr=0.01, amt_epochs=100):
@@ -196,7 +196,7 @@ class LinearRegressionWithGradient(BaseModel):
         return W
 
 
-class LogisticRegression():
+class LogisticRegression(object):
 
     def __init__(self):
         self.w = None
@@ -209,10 +209,11 @@ class LogisticRegression():
         :param b: batch size for mini-batch
         :param gradient: type of gradient descent: 'SGD', 'MINI', 'BGD'
     """
-    def fit(self, X, y, lr=0.01, epochs=100, b=16, gradient='SGD'):
-        X_expanded = np.vstack((X, np.ones(len(self.X)))).T
+    def fit(self, X=None, y=None, lr=0.01, epochs=100, b=16, gradient='SGD'):
+        print(y)
+        X_expanded = np.hstack((np.ones((len(X),1)),X))
 
-        if gradient== 'BGD':
+        if gradient == 'BGD':
             h, w = self.gradient_descent(X_expanded, y, lr, epochs)
             self.w = w
             return h, w
@@ -226,7 +227,7 @@ class LogisticRegression():
             return h, w
 
     def predict(self, X):
-        X_expanded = np.vstack((X, np.ones(len(X)))).T
+        X_expanded = np.hstack((np.ones((len(X),1)),X))
         pred = self.sigmoid(np.dot(X_expanded, self.w))
         return [1 if i >= 0.5 else 0 for i in pred]
 
